@@ -91,3 +91,30 @@ Open [http://localhost:3000](http://localhost:3000) to see the app.
 ## 🔒 Security Note
 - Row Level Security (RLS) is enabled to strictly isolate user data.
 - Middleware protects the `/dashboard` route from unauthenticated access.
+
+## 💡 Technical Challenges & Solutions
+
+### 1. OAuth Redirects on Deployment
+**Challenge:** After deploying to Vercel, Google OAuth redirected back to `localhost:3000`, breaking the login flow.
+**Solution:**
+- Configured **Redirect URLs** in Supabase to include the production domain with a wildcard (`https://<project>.vercel.app/**`).
+- Ensured the callback route `/auth/callback` was correctly matched.
+
+### 2. Instant UI Feedback (Optimistic Updates)
+**Challenge:** Deleting a bookmark felt sluggish because the UI waited for the server response before removing the item.
+**Solution:**
+- Implemented **Optimistic Updates** in the `useBookmarks` hook.
+- The item is immediately removed from the local state (`setBookmarks`) before the API call is made.
+- If the API call fails, the change is reverted, ensuring a snappy yet reliable user experience.
+
+### 3. Search Performance
+**Challenge:** Filtering the bookmark list on every keystroke caused unnecessary re-renders.
+**Solution:**
+- Implemented **Debouncing** (300ms delay) in the `BookmarkList` component.
+- The search logic waits for the user to stop typing before filtering the list, optimizing performance.
+
+### 4. Next.js 15 Async Cookies
+**Challenge:** Next.js 15 made `cookies()` asynchronous, breaking standard Supabase SSR patterns.
+**Solution:**
+- Updated middleware and server clients to `await cookies()`.
+- Used the new `getAll` and `setAll` methods from `@supabase/ssr` to correctly handle cookie sessions in the latest Next.js version.
